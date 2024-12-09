@@ -1,0 +1,6 @@
+<Mod
+	name="Conjurer-Reborn-Unsafe"
+	description="Runtime library for Conjurer-Reborn.\nActually, if the Conjurer-Reborn mod is not enabled, \nthis mod will not make any changes to the game. \nIf you are not particularly sensitive about having mods enabled, \nyou can keep this mod activated at all times"
+	request_no_api_restrictions="1" 
+> 
+</Mod>
