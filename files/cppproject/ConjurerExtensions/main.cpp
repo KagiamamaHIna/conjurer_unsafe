@@ -4,6 +4,12 @@
 #include <string>
 #include <filesystem>
 
+#define CBC 0
+#define ECB 0
+extern "C" {
+#include <aes.h>
+}
+
 #include "LuaFilesApi.h"
 #include "LuaRatioStr.h"
 #include "lua.hpp"
@@ -14,7 +20,54 @@
 #include "LuaNdata.h"
 #include "LuaImage.h"
 
+
+static void DecryptBlock(uint8_t* blockDatas, size_t size, const uint8_t key[16], const uint8_t iv[16]) {
+	//初始化AES_ctx对象
+	AES_ctx ctx;
+	AES_init_ctx_iv(&ctx, key, iv);
+	AES_CTR_xcrypt_buffer(&ctx, blockDatas, size);
+}
+
+static std::vector<uint8_t> ReadBinFile(const char* path) {//读取二进制文件
+	std::ifstream inputFile(path, std::ios::binary | std::ios::out);
+	inputFile.seekg(0, std::ios::end);//移动文件指针以获得文件大小
+	std::streamsize fileSize = inputFile.tellg();
+	inputFile.seekg(0, std::ios::beg);
+
+	std::vector<uint8_t> result(fileSize);
+	inputFile.read((char*)result.data(), fileSize);
+	return result;
+}
+
 namespace lua {
+	int lua_AES128CTR(lua_State* L) {
+		const char* path = luaL_checkstring(L, 1);
+		if (!lua_istable(L, 2)) {//key
+			lua_error(L);
+			return 0;
+		}
+		if (!lua_istable(L, 3)) {//iv
+			lua_error(L);
+			return 0;
+		}
+		uint8_t key[16];//局部缓冲区
+		uint8_t iv[16];
+		for (size_t i = 1; i <= 16; i++) {//遍历表，以获得key和iv
+			lua_rawgeti(L, 2, i);
+			key[i - 1] = luaL_checkinteger(L, -1);
+			lua_pop(L, 1);
+		}
+		for (size_t i = 1; i <= 16; i++) {
+			lua_rawgeti(L, 3, i);
+			iv[i - 1] = luaL_checkinteger(L, -1);
+			lua_pop(L, 1);
+		}
+		std::vector<uint8_t> data = ReadBinFile(path);
+		DecryptBlock(data.data(), data.size(), key, iv);
+		lua_pushstring(L, std::string(data.begin(), data.end()).c_str());
+		return 1;
+	}
+
 	int lua_UTF8StringSub(lua_State* L) {
 		pinyin::Utf8String s1 = pinyin::Utf8String(luaL_checkstring(L, 1));
 		int pos1 = luaL_checkinteger(L, 2) - 1;
@@ -44,6 +97,23 @@ namespace lua {
 			lua_pushstring(L, s1[i].c_str());
 			lua_rawseti(L, -2, i + 1);
 		}
+		return 1;
+	}
+
+	int lua_FinnishToEnLower(lua_State* L) {
+		pinyin::Utf8String s1 = pinyin::Utf8String(luaL_checkstring(L, 1));
+		for (size_t i = 0; i < s1.size(); i++) {
+			if (s1[i] == "Å" || s1[i] == "å") {
+				s1[i] = "a";
+			}
+			else if (s1[i] == "Ä" || s1[i] == "ä") {
+				s1[i] = "a";
+			}
+			else if (s1[i] == "Ö" || s1[i] == "ö") {
+				s1[i] = "o";
+			}
+		}
+		lua_pushstring(L, s1.ToStream().c_str());
 		return 1;
 	}
 
@@ -239,6 +309,7 @@ static luaL_Reg luaLibs[] = {
 	{ "UTF8StringSub", lua::lua_UTF8StringSub},
 	{ "UTF8StringChars", lua::lua_UTF8StringChars},
 	{ "ConcatStr", lua::lua_ConcatStr},
+	{ "FinnishToEnLower", lua::lua_FinnishToEnLower},
 
 	{ "Ratio", lua::lua_Ratio},
 	{ "PartialRatio", lua::lua_PartialRatio},
@@ -266,6 +337,8 @@ static luaL_Reg luaLibs[] = {
 
 	{ "NullImageCreate", luaImage::NullImageCreate},
 	{ "ImageCreate", luaImage::ImageCreate},
+
+	{ "AES128CTR", lua::lua_AES128CTR},
 
 	{ NULL, NULL }
 };
