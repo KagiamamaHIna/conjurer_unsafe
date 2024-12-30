@@ -9,3 +9,8 @@
 /files/module/ConjurerExtensions.lib
 /files/module/ConjurerExtensions.exp
 /files/module/debug/
+/files/cppproject/steamworks_sdk_161
+/files/cppproject/LuaSteamAPI/.vs/
+/files/cppproject/LuaSteamAPI/LuaSteamAPI/
+/files/module/LuaSteamAPI.lib
+/files/module/LuaSteamAPI.exp
