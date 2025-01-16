@@ -81,9 +81,17 @@ namespace lua {
 	}
 
 	int lua_PathExists(lua_State* L) {
-		std::string str = luaL_checkstring(L, 1);
-		lua_pushboolean(L, std::filesystem::exists(str));
-		return 1;
+		try {
+			std::string str = luaL_checkstring(L, 1);
+			lua_pushboolean(L, std::filesystem::exists(str));
+			return 1;
+		}
+		catch (...) {
+			std::cout << "nolla you write xml code like shit.\n";
+			lua_pushboolean(L, false);
+			return 1;
+		}
+
 	}
 
 	int lua_CreateDir(lua_State* L) {
