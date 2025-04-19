@@ -68,6 +68,40 @@ namespace lua {
 		return 1;
 	}
 
+	int lua_AES128CTRToFile(lua_State* L) {
+		const char* path = luaL_checkstring(L, 1);
+		const char* toFile = luaL_checkstring(L, 2);
+		if (!lua_istable(L, 3)) {//key
+			lua_error(L);
+			return 0;
+		}
+		if (!lua_istable(L, 4)) {//iv
+			lua_error(L);
+			return 0;
+		}
+		uint8_t key[16];//局部缓冲区
+		uint8_t iv[16];
+		for (size_t i = 1; i <= 16; i++) {//遍历表，以获得key和iv
+			lua_rawgeti(L, 3, i);
+			key[i - 1] = luaL_checkinteger(L, -1);
+			lua_pop(L, 1);
+		}
+		for (size_t i = 1; i <= 16; i++) {
+			lua_rawgeti(L, 4, i);
+			iv[i - 1] = luaL_checkinteger(L, -1);
+			lua_pop(L, 1);
+		}
+		std::vector<uint8_t> data = ReadBinFile(path);
+		DecryptBlock(data.data(), data.size(), key, iv);
+		auto WriteBinFile = [](const std::string& path, const std::vector<uint8_t>& BinData) {//写入二进制文件
+			std::ofstream outputFile(path, std::ios::binary | std::ios::trunc);
+			outputFile.write((const char*)BinData.data(), BinData.size());
+			outputFile.close();
+			};
+		WriteBinFile(toFile, data);
+		return 0;
+	}
+
 	int lua_UTF8StringSub(lua_State* L) {
 		pinyin::Utf8String s1 = pinyin::Utf8String(luaL_checkstring(L, 1));
 		int pos1 = luaL_checkinteger(L, 2) - 1;
@@ -339,7 +373,7 @@ static luaL_Reg luaLibs[] = {
 	{ "ImageCreate", luaImage::ImageCreate},
 
 	{ "AES128CTR", lua::lua_AES128CTR},
-
+	{ "AES128CTRToFile", lua::lua_AES128CTRToFile},
 	{ NULL, NULL }
 };
 

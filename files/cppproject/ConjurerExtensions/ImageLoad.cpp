@@ -62,13 +62,40 @@ namespace image {
 		memset(imageData, 0, size);
 	}
 
+	stb_image::stb_image(const stb_image& src) {
+		width = src.width;
+		height = src.height;
+		channels = src.channels;
+		size_t size = width * height * channels;
+		imageData = (unsigned char*)malloc(size);
+		memcpy(imageData, src.imageData, size);
+	}
+
+	stb_image::stb_image(stb_image&& src) noexcept {
+		width = src.width;
+		height = src.height;
+		channels = src.channels;
+		imageData = src.imageData;
+		src.imageData = 0;
+	}
+
+	stb_image& stb_image::operator=(stb_image&& src) noexcept {
+		width = src.width;
+		height = src.height;
+		channels = src.channels;
+		imageData = src.imageData;
+		src.imageData = 0;
+		return *this;
+	}
+
 	stb_image::~stb_image() {
 		if (imageData != 0) {
 			stbi_image_free(imageData);
+			imageData = 0;
 		}
 	}
 
-	bool stb_image::WritePng(std::string& path) const {
+	bool stb_image::WritePng(const std::string& path) const {
 		return static_cast<bool>(stbi_write_png(path.c_str(), width, height, channels, imageData, width * channels));
 	}
 

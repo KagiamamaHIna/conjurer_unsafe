@@ -85,6 +85,11 @@ namespace image {
 
 		stb_image(const unsigned char* data, const int src_width, const int src_height, const int channel);
 		stb_image(const int src_width, const int src_height, const int channel);//透明图片
+
+		stb_image(const stb_image& src);
+		stb_image(stb_image&& src) noexcept;
+
+		stb_image& operator=(stb_image&& src)noexcept;
 		/*
 		如果 req_comp 设置为 0，stbi_load 将加载图像的所有颜色通道（例如，RGB 或 RGBA）。
 		如果 req_comp 设置为 1，stbi_load 将加载图像的灰度通道（单通道）。
@@ -102,7 +107,7 @@ namespace image {
 			return result;
 		}
 
-		void SetPixel(int x, int y, rgba color) {//获取像素
+		void SetPixel(int x, int y, rgba color) {//设置像素
 			int pixelIndex = (y * width + x) * channels;//计算像素索引
 			int colorChannel = color.channels;
 			for (int i = 0; i < colorChannel; i++) {//设置像素的rgba颜色
@@ -126,7 +131,7 @@ namespace image {
 			return !static_cast<bool>(imageData);
 		}
 
-		bool WritePng(std::string& path) const;
+		bool WritePng(const std::string& path) const;
 		bool WritePng(const char* path) const;
 
 		virtual ~stb_image();
