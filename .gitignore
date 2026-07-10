@@ -6,6 +6,7 @@
 /cache
 /files/cppproject/rapidfuzz-cpp-3.0.5
 /files/cppproject/lua
+/files/cppproject/luajit
 /files/module/ConjurerExtensions.lib
 /files/module/ConjurerExtensions.exp
 /files/module/debug/
