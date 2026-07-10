@@ -1,6 +1,3 @@
 [submodule "files/cppproject/PinIn4Cpp"]
 	path = files/cppproject/PinIn4Cpp
 	url = https://github.com/KagiamamaHIna/PinIn4Cpp.git
-[submodule "files/cppproject/NVFSPatcher"]
-	path = files/cppproject/NVFSPatcher
-	url = https://github.com/KagiamamaHIna/NVFSPatcher
