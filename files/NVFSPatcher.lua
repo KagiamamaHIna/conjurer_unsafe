@@ -95,6 +95,13 @@ local function StdStringToStr(stdstrPtr)
 	return ffi.string(stdstr.data.sso_buffer, stdstr.size)
 end
 
+local ModDiskFileDeviceList = {}--挂载到表里面，防止被析构
+local function ModDiskFileDevice(path)
+    local mdfd = ffi.new("char[?]", 0x54)
+    ModDiskFileDeviceList[#ModDiskFileDeviceList+1] = mdfd
+    return cModDiskFileDevice(mdfd, ToStdString(""), path)
+end
+
 ---将给定的创意工坊路径加载到指定的虚拟文件路径下
 ---<br>在后续的世界循环中挂载可能会崩溃，尽量在init里使用
 ---@param RealPathNoSlash string 不带 / 字符
@@ -104,7 +111,7 @@ function ModFileAddVFS(RealPathNoSlash, VirtualPath)
     local vpath = ToStdString(VirtualPath)
     cModFileAddVFS(
         UnknownVFSField,
-        cModDiskFileDevice(ffi.new("char[?]", 0x54), ToStdString(""), path),
+        ModDiskFileDevice(path),
         1, --bool 开启了这个才能扫描绝对路径
         path,
         path,
