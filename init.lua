@@ -29,6 +29,7 @@ local function AddVF()
     end
     dofile_once("mods/conjurer_unsafe/files/NVFSPatcher.lua")
 	ModFileAddVFS(conjurerPath, "mods/conjurer_reborn/")
+    return true
 end
 
 local envList = {}
