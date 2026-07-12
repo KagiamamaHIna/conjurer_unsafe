@@ -1,5 +1,5 @@
 local ffi = require("ffi")
-ffi.cdef([[
+ffi.cdef[[
 int SetDllDirectoryA(const char* lpPathName);
 
 void NVFSMHInit();
@@ -10,8 +10,8 @@ uint32_t NVFSFindModDiskFileDevice();
 uint32_t NVFSUnknownVFS();
 
 union ssoUnion {
-	char* buffer;
-	char sso_buffer[16];
+    char* buffer;
+    char sso_buffer[16];
 };
 
 struct std_string { /* VC++ std::string */
@@ -19,11 +19,33 @@ struct std_string { /* VC++ std::string */
     size_t size;
     size_t capacity;
 };
-typedef void __fastcall ModFileAddVFS(void* unknownVFS, void* ModDiskFileDeviceObj, int is_workshop, struct std_string* true_path_non_slash, struct std_string* true_path_non_slash, struct std_string* vfpath, void* ModDiskFileDeviceCaching);
+
+struct ModDiskFileDeviceCaching_vftable {
+    void* destroy;
+    void* null_field1;
+    void* field1;
+    void* field2;
+    void* field3;
+    char* (__thiscall *unkfn1)(struct ModDiskFileDeviceCaching*, char*, struct std_string* path);//返回值为疑似参数2
+    void* field5;//workshop或绝对路径相关的东西？ModFileAddVFS内部会在is_workshop时调用同一个函数
+    bool (__thiscall *FileHasSet)(struct ModDiskFileDeviceCaching*,struct std_string* path);//检查文件是否被ModTextFileSetContent过
+    void* field7;//返回一个固定的字符串，剩下的也都不是thiscall了
+    void* field8;
+    void* field9;
+    void* field10;
+};
+
+struct ModDiskFileDeviceCaching{
+    struct ModDiskFileDeviceCaching_vftable* vtable;
+    int unk1;
+    int unk2;
+};
+
+typedef void __fastcall ModFileAddVFS(void* unknownVFS, void* ModDiskFileDeviceObj, int is_workshop, struct std_string* true_path_non_slash, struct std_string* true_path_non_slash, struct std_string* vfpath, struct ModDiskFileDeviceCaching* MDFDCptr);
 typedef void* __thiscall unknownVFSFn(void*);
 typedef void* __thiscall ModDiskFileDevice(char* this, struct std_string* a2, struct std_string* a3);
+]]
 
-]])
 ffi.C.SetDllDirectoryA("mods/conjurer_unsafe/files/module/")
 local NVFS = ffi.load("NVFSPatcher")
 
@@ -116,6 +138,6 @@ function ModFileAddVFS(RealPathNoSlash, VirtualPath)
         path,
         path,
         vpath,
-		ffi.cast("char**", VFSystem)[0]
-	)
+        ffi.cast("struct ModDiskFileDeviceCaching**", VFSystem)[0]
+    )
 end
