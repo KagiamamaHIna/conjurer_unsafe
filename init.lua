@@ -3,7 +3,7 @@ if not ModIsEnabled("conjurer_reborn") and not ModSettingGetNextValue("conjurer_
 	return
 end
 print("Conjurer reborn unsafe loaded!")
-ConjurerRebornUnsafeVer = 6
+ConjurerRebornUnsafeVer = 7
 
 ---@return boolean 表示是否存在模组
 local function AddVF()
