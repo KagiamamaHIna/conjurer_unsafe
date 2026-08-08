@@ -1,3 +1,5 @@
+dofile_once("mods/conjurer_unsafe/files/YNPCommon.lua")
+
 local ffi = require("ffi")
 ffi.cdef[[
 int SetDllDirectoryA(const char* lpPathName);
@@ -9,26 +11,15 @@ uint32_t NVFSFindModFileAddVFS();
 uint32_t NVFSFindModDiskFileDevice();
 uint32_t NVFSUnknownVFS();
 
-union ssoUnion {
-    char* buffer;
-    char sso_buffer[16];
-};
-
-struct std_string_ynp { /* VC++ std::string 避免与np重名*/
-    union ssoUnion data;
-    size_t size;
-    size_t capacity;
-};
-
 struct ModDiskFileDeviceCaching_vftable {
     void* destroy;
     void* null_field1;
     void* field1;
     void* field2;
     void* field3;
-    char* (__thiscall *unkfn1)(struct ModDiskFileDeviceCaching*, char*, struct std_string_ynp* path);//返回值为疑似参数2
+    char* (__thiscall *unkfn1)(struct ModDiskFileDeviceCaching*, char*, struct std_string* path);//返回值为疑似参数2
     void* field5;//workshop或绝对路径相关的东西？ModFileAddVFS内部会在is_workshop时调用同一个函数
-    bool (__thiscall *FileHasSet)(struct ModDiskFileDeviceCaching*,struct std_string_ynp* path);//检查文件是否被ModTextFileSetContent过
+    bool (__thiscall *FileHasSet)(struct ModDiskFileDeviceCaching*,struct std_string* path);//检查文件是否被ModTextFileSetContent过
     void* field7;//返回一个固定的字符串，剩下的也都不是thiscall了
     void* field8;
     void* field9;
@@ -41,9 +32,9 @@ struct ModDiskFileDeviceCaching{
     int unk2;
 };
 
-typedef void __fastcall ModFileAddVFS(void* unknownVFS, void* ModDiskFileDeviceObj, int is_workshop, struct std_string_ynp* true_path_non_slash, struct std_string_ynp* true_path_non_slash, struct std_string_ynp* vfpath, struct ModDiskFileDeviceCaching* MDFDCptr);
+typedef void __fastcall ModFileAddVFS(void* unknownVFS, void* ModDiskFileDeviceObj, int is_workshop, struct std_string* true_path_non_slash, struct std_string* true_path_non_slash, struct std_string* vfpath, struct ModDiskFileDeviceCaching* MDFDCptr);
 typedef void* __thiscall unknownVFSFn(void*);
-typedef void* __thiscall ModDiskFileDevice(char* this, struct std_string_ynp* a2, struct std_string_ynp* a3);
+typedef void* __thiscall ModDiskFileDevice(char* this, struct std_string* a2, struct std_string* a3);
 ]]
 
 ffi.C.SetDllDirectoryA("mods/conjurer_unsafe/files/module/")
@@ -83,7 +74,7 @@ local UnknownVFSField = getUnknownVFSField()
 ---@param str string
 ---@return std_string
 local function ToStdString(str)
-    local stdstrPtr = ffi.new("struct std_string_ynp[1]")
+    local stdstrPtr = ffi.new("struct std_string[1]")
 	local stdstr = stdstrPtr[0]
     stdstr.size = str:len()
     if str:len() >= 16 then
