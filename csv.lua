@@ -26,8 +26,8 @@ function ParseCSV(str)
         cellDatas = cellDatas,
         cellArrangement = cellArrangement,
         ---获取key对应值
-        ---@param row string
-        ---@param column string
+        ---@param row string key
+        ---@param column string lang
         ---@return string|nil
         get = function(row, column)
             -- 尝试转为数字索引
@@ -86,21 +86,22 @@ function ParseCSV(str)
     local charNum = 0
     local posRow = 1
     local posColumn = 1
-    for i = 1, #str do
+    local i = 1
+    while i <= #str do
         charNum = codepoint(str, i, i)
-        if state_quotationMark then            -- 处于双引号包裹中
+        if state_quotationMark then               -- 处于双引号包裹中
             state_quotationMark = (charNum ~= 34) --减少分支优化
-        	if charNum == 92 then --转义符考虑
-        		i = i + 1 --当前字符是转义符，下一个字符也应该跳过，所以加1，下一次循环再加1
-        	end
+            if charNum == 92 then                 --转义符考虑
+                i = i + 1                         --当前字符是转义符，下一个字符也应该跳过，所以加1，下一次循环再加1
+            end
         else
-            if charNum == 34 then                                     -- 34为"符号
-                state_quotationMark = true                            -- 进入双引号包裹
-            elseif charNum == 44 then                                 -- 分隔符为en逗号 44为,
+            if charNum == 34 then                                  -- 34为"符号
+                state_quotationMark = true                         -- 进入双引号包裹
+            elseif charNum == 44 then                              -- 分隔符为en逗号 44为,
                 set(posRow, posColumn, usub(str, StartPos, i - 1)) --i-1是为了不要把,加进去
-                StartPos = i + 1                                      --重设起始位
+                StartPos = i + 1                                   --重设起始位
                 posColumn = posColumn + 1
-            elseif charNum == 10 then                                 --10为\n
+            elseif charNum == 10 then                              --10为\n
                 -- 对连续换行(空行)和"\n"(Windows换行符)特殊处理
                 if (codepoint(str, i - 1, i - 1) ~= 10) then
                     set(posRow, posColumn, usub(str, StartPos, i - 1))
@@ -110,6 +111,7 @@ function ParseCSV(str)
                 end
             end
         end
+        i = i + 1
     end
     set(posRow, posColumn, usub(str, StartPos, #str - 1))
     return result
